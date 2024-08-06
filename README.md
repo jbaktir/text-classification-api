@@ -47,17 +47,46 @@ Send a POST request to the API Gateway endpoint with the following JSON body:
 
 The response will contain the predicted label for the document.
 
+## Data Preparation and Embedding
+
+Before training the model, you need to prepare your data and generate embeddings. The project assumes that your training data is organized in subdirectories, where each subdirectory name represents a label category.
+
+1. Organize your text documents in subdirectories, with each subdirectory representing a category.
+
+2. Use the `process_and_save_embeddings` function in `embedding_utils.py` to generate embeddings:
+
+   ```python
+   from embedding_utils import process_and_save_embeddings
+
+   process_and_save_embeddings('path/to/your/data/directory')
+   ```
+
+   This function will:
+   - Recursively find all .txt files in the specified directory
+   - Generate embeddings for each document using Amazon Bedrock
+   - Save the embeddings and corresponding labels to 'embedding_labels.pkl'
+
 ## Training
 
-To retrain the model:
+To train the model:
 
-1. Prepare your training data.
-2. Update the `train_model.py` script as needed.
-3. Run the training script:
+1. Ensure you have generated the embeddings as described in the Data Preparation and Embedding section.
+
+2. Run the training script:
    ```
    python train_model.py
    ```
-4. Rebuild and redeploy the Docker image using the steps in the Setup and Deployment section.
+
+The training process uses Optuna for hyperparameter optimization and trains a LightGBM model. The script will:
+- Load the embeddings and labels from 'embedding_labels.pkl'
+- Split the data into training and testing sets
+- Use Optuna to find the best hyperparameters
+- Train the final model with the best hyperparameters
+- Evaluate the model's accuracy
+- Save the trained model as 'document_classification_model.pkl'
+- Save the label mappings as 'label_mappings.pkl'
+
+After training, you should rebuild and redeploy the Docker image to update the Lambda function with the new model.
 
 ## Testing
 
@@ -79,3 +108,6 @@ If you need to update the Lambda function code:
 2. Rebuild and push the Docker image using `build_and_push_image.py`.
 3. Update the Lambda function with the new image using `update_lambda.py`.
 
+## Note
+
+Make sure to set up the necessary AWS credentials and permissions before running the scripts. You may need to configure the AWS CLI or set environment variables for AWS access. Ensure that you have the required permissions to use Amazon Bedrock for generating embeddings.
