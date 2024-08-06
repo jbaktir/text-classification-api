@@ -10,6 +10,8 @@ import optuna
 with open('embedding_labels.pkl', 'rb') as f:
     embedding_labels = pickle.load(f)
 
+print(embedding_labels[:1])
+
 embeddings = np.array([item[0] for item in embedding_labels])
 labels = [item[1] for item in embedding_labels]
 
@@ -102,9 +104,9 @@ for feature, importance in feature_importance[:10]:
     print(f"{feature}: {importance}")
 
 # Save the model using pickle
-with open('../document_classification_model.pkl', 'wb') as f:
+with open('document_classification_model.pkl', 'wb') as f:
     pickle.dump(bst, f)
 
 # Save the label_to_index and index_to_label mappings
-with open('../label_mappings.pkl', 'wb') as f:
+with open('label_mappings.pkl', 'wb') as f:
     pickle.dump((label_to_index, index_to_label), f)
