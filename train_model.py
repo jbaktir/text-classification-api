@@ -1,5 +1,3 @@
-import os
-import glob
 import pickle
 import lightgbm as lgb
 from sklearn.model_selection import train_test_split
@@ -7,10 +5,9 @@ from sklearn.metrics import accuracy_score
 import numpy as np
 import optuna
 
+# Load your data here
 with open('embedding_labels.pkl', 'rb') as f:
     embedding_labels = pickle.load(f)
-
-print(embedding_labels[:1])
 
 embeddings = np.array([item[0] for item in embedding_labels])
 labels = [item[1] for item in embedding_labels]
@@ -26,7 +23,6 @@ y = np.array([label_to_index[label] for label in labels])
 # Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(embeddings, y, test_size=0.2, random_state=42)
 
-# Define the objective function for Optuna
 def objective(trial):
     params = {
         'objective': 'multiclass',
@@ -46,16 +42,13 @@ def objective(trial):
         'verbose': -1
     }
 
-    # Train the model
     train_data = lgb.Dataset(X_train, label=y_train)
     num_round = trial.suggest_int('num_round', 50, 300)
     bst = lgb.train(params, train_data, num_round)
 
-    # Make predictions
     y_pred = bst.predict(X_test)
     y_pred_classes = np.argmax(y_pred, axis=1)
 
-    # Calculate accuracy
     accuracy = accuracy_score(y_test, y_pred_classes)
     return accuracy
 
@@ -63,7 +56,6 @@ def objective(trial):
 study = optuna.create_study(direction='maximize')
 study.optimize(objective, n_trials=100)
 
-# Print the best hyperparameters and the corresponding accuracy
 print('Best hyperparameters: ', study.best_params)
 print('Best accuracy: ', study.best_value)
 
@@ -80,33 +72,18 @@ train_data = lgb.Dataset(X_train, label=y_train)
 num_round = best_params.pop('num_round')
 bst = lgb.train(best_params, train_data, num_round)
 
-# Make predictions
+# Make predictions and calculate accuracy
 y_pred = bst.predict(X_test)
 y_pred_classes = np.argmax(y_pred, axis=1)
-
-# Convert predicted class indices back to original class names
 y_pred_labels = [index_to_label[idx] for idx in y_pred_classes]
-
-# Calculate accuracy
 accuracy = accuracy_score([index_to_label[idx] for idx in y_test], y_pred_labels)
 print(f'Accuracy: {accuracy}')
 
-# Print some example predictions
-for i in range(10):
-    print(f'True Label: {index_to_label[y_test[i]]}, Predicted Label: {y_pred_labels[i]}')
-
-# Feature importance
-importance = bst.feature_importance()
-feature_names = [f'feature_{i}' for i in range(len(importance))]
-feature_importance = sorted(zip(feature_names, importance), key=lambda x: x[1], reverse=True)
-print("\nTop 10 important features:")
-for feature, importance in feature_importance[:10]:
-    print(f"{feature}: {importance}")
-
-# Save the model using pickle
+# Save the model and label mappings
 with open('document_classification_model.pkl', 'wb') as f:
     pickle.dump(bst, f)
 
-# Save the label_to_index and index_to_label mappings
 with open('label_mappings.pkl', 'wb') as f:
     pickle.dump((label_to_index, index_to_label), f)
+
+print("Model and label mappings saved.")
