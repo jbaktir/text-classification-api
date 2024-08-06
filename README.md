@@ -42,6 +42,14 @@ This project implements a document classification system using AWS Lambda and Am
    docker buildx build --platform linux/amd64 -t $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPOSITORY_NAME:latest . --push
    ```
 
+   ```bash
+   aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 021891619731.dkr.ecr.us-east-1.amazonaws.com
+   docker buildx build --platform linux/amd64 -t lambda-lightgbm:latest --load .
+   docker tag lambda-lightgbm:latest 021891619731.dkr.ecr.us-east-1.amazonaws.com/lambda-lightgbm:latest
+   docker push 021891619731.dkr.ecr.us-east-1.amazonaws.com/lambda-lightgbm:latest
+
+   ```
+
    This command builds a multi-platform image compatible with AWS Lambda (which uses x86_64 architecture) and pushes it to ECR.
 
 2. Update the Lambda function with the new image:
