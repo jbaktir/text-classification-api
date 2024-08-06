@@ -14,7 +14,6 @@ This project implements a document classification system using AWS Lambda and Am
 ├── train_model.py
 ├── test_api_gateway.py
 ├── update_lambda.py
-├── build_and_push_image.py
 ├── test_lambda_local.py
 ├── example_events.py
 ├── document_classification_model.pkl
@@ -24,9 +23,26 @@ This project implements a document classification system using AWS Lambda and Am
 ## Setup and Deployment
 
 1. Build and push the Docker image to ECR:
+
+   For Mac with Apple Silicon, use the following commands:
+
+   ```bash
+   # Set up environment variables
+   export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+   export REGION=$(aws configure get region)
+   export REPOSITORY_NAME=document-classifier
+
+   # Create the ECR repository if it doesn't exist
+   aws ecr create-repository --repository-name $REPOSITORY_NAME --image-scanning-configuration scanOnPush=true
+
+   # Authenticate Docker to ECR
+   aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
+
+   # Build and push the image using buildx
+   docker buildx build --platform linux/amd64 -t $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPOSITORY_NAME:latest . --push
    ```
-   python build_and_push_image.py
-   ```
+
+   This command builds a multi-platform image compatible with AWS Lambda (which uses x86_64 architecture) and pushes it to ECR.
 
 2. Update the Lambda function with the new image:
    ```
@@ -105,7 +121,7 @@ After training, you should rebuild and redeploy the Docker image to update the L
 If you need to update the Lambda function code:
 
 1. Make your changes to the relevant Python files.
-2. Rebuild and push the Docker image using `build_and_push_image.py`.
+2. Rebuild and push the Docker image using the commands provided in the Setup and Deployment section.
 3. Update the Lambda function with the new image using `update_lambda.py`.
 
 ## Note
