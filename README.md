@@ -1,7 +1,3 @@
-Sure, I can update the README to explain the new files. Here is the revised version:
-
----
-
 # AWS Lambda Function with API Gateway
 
 This project demonstrates how to create and deploy an AWS Lambda function using Docker. The Lambda function is served via API Gateway. The function is designed for document classification, utilizing a pre-trained machine learning model.
