@@ -1,0 +1,8 @@
+boto3
+requests
+python-dotenv
+lightgbm
+optuna
+numpy
+scikit-learn
+sentence-transformers

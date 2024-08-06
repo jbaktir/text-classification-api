@@ -1,22 +1,17 @@
-FROM amazonlinux:2
+FROM public.ecr.aws/lambda/python:3.9
 
+# Install system dependencies
 RUN yum update -y && \
-    yum install -y gcc gcc-c++ make cmake3 git python3 python3-devel tar wget
+    yum install -y gcc gcc-c++ make
 
-# Install CMake 3.28
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.28.0/cmake-3.28.0-linux-x86_64.sh && \
-    chmod +x cmake-3.28.0-linux-x86_64.sh && \
-    ./cmake-3.28.0-linux-x86_64.sh --skip-license --prefix=/usr/local && \
-    rm cmake-3.28.0-linux-x86_64.sh
+# Copy function code and model files
+COPY lambda_function.py ${LAMBDA_TASK_ROOT}
+COPY document_classification_model.pkl ${LAMBDA_TASK_ROOT}
+COPY label_mappings.pkl ${LAMBDA_TASK_ROOT}
 
-RUN git clone --recursive https://github.com/microsoft/LightGBM && \
-    cd LightGBM && \
-    mkdir build && \
-    cd build && \
-    cmake .. && \
-    make -j4
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 
-RUN mkdir -p /opt/python/lightgbm/lib && \
-    cp /LightGBM/lib_lightgbm.so /opt/python/lightgbm/lib/
-
-CMD ["/bin/bash"]
+# Set the CMD to your handler
+CMD [ "lambda_function.lambda_handler" ]
